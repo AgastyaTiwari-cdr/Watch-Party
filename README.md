@@ -1,5 +1,6 @@
 # SyncVibe — synchronized YouTube watch party
 Link: https://watch-party-server-steel.vercel.app/
+
 SyncVibe is a responsive watch-party MVP with a dark, polished interface and a separate Socket.IO realtime backend. It supports room codes/invite links, host-authorized playback commands, YouTube IFrame Player API playback, late joins, short reconnect recovery, shared chat, reactions, playlist queueing, polls, host transfer, fuzzy search over a small curated catalogue, and a health endpoint.
 
 > **Honest release status:** this is a deployable MVP, not a hardened commercial service. Room state is in memory and is lost when the backend restarts. There are no accounts, durable database, moderation dashboard, Redis adapter, or guaranteed performance SLA. A real YouTube playback test requires a browser with network access and depends on each video's embed permissions.
