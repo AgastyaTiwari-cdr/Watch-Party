@@ -21,7 +21,7 @@ const state = {
   resumeToken: store.get('resumeToken'), roomCode: store.get('roomCode'), displayName: store.get('displayName'),
   latestPlayback: null, lastAppliedRevision: -1, lastHostTime: null, suppressHostEventsUntil: 0,
   modalMode: 'create', pendingJoinCode: new URL(location.href).searchParams.get('room')?.toUpperCase() || '',
-  chatIds: new Set(), serverUrl: store.get('serverUrl', window.SYNCVIBE_SERVER_URL || 'http://localhost:3000'),
+  chatIds: new Set(), serverUrl: store.get('serverUrl', window.SYNCVIBE_SERVER_URL || 'https://watch-party-9s9m.onrender.com'),
   lastPlayerState: -1, playerPoll: null, isApplyingRemote: false, serverClockOffset: 0, autoplayBlocked: false
 };
 
@@ -391,7 +391,7 @@ function setupEvents() {
   $('leaveRoomButton').addEventListener('click',leaveRoom);
   $('settingsButton').addEventListener('click',()=>{ $('serverUrlInput').value=state.serverUrl; showModal('settingsModal'); });
   $('settingsForm').addEventListener('submit',async event=>{ event.preventDefault(); const url=$('serverUrlInput').value.trim().replace(/\/$/,''); try { const parsed=new URL(url); if(!['http:','https:'].includes(parsed.protocol)) throw new Error(); } catch { return toast('Enter a valid HTTP(S) server URL.','error'); } if (url !== state.serverUrl && state.room) await leaveRoom(); state.serverUrl=url; store.set('serverUrl',url); connect(); closeModal(); toast('Server URL saved. Connecting…'); });
-  $('resetServerUrl').addEventListener('click',async()=>{ if(state.room && state.serverUrl!=='http://localhost:3000') await leaveRoom(); state.serverUrl='http://localhost:3000'; store.set('serverUrl',state.serverUrl); $('serverUrlInput').value=state.serverUrl; connect(); toast('Local server URL selected.'); });
+  $('resetServerUrl').addEventListener('click',async()=>{ if(state.room && state.serverUrl!=='https://watch-party-9s9m.onrender.com') await leaveRoom(); state.serverUrl='https://watch-party-9s9m.onrender.com'; store.set('serverUrl',state.serverUrl); $('serverUrlInput').value=state.serverUrl; connect(); toast('Local server URL selected.'); });
   document.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',closeModal));
   $('modalBackdrop').addEventListener('click',event=>{ if(event.target===$('modalBackdrop')) closeModal(); });
   document.addEventListener('keydown',event=>{ if(event.key==='Escape') closeModal(); if(event.key==='/' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName) && !event.ctrlKey && !event.metaKey){event.preventDefault();$('searchInput').focus();} });
