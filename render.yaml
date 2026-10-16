@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: syncvibe-realtime
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: MAX_MEMBERS
+        value: 30
+      # After deploying the frontend, set CLIENT_ORIGINS in the Render dashboard to the exact Vercel URL(s).

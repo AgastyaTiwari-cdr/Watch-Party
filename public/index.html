@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#090e1c">
+  <meta name="description" content="Watch YouTube together in real time with shared playback, chat, reactions, playlists and polls.">
+  <title>SyncVibe — Watch together, feel closer</title>
+  <link rel="preconnect" href="https://www.youtube.com">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com">
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" defer></script>
+  <script src="https://www.youtube.com/iframe_api" defer></script>
+  <script src="./config.js" defer></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="SyncVibe home"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.8a2 2 0 0 1 2.1-.1l13.1 7.1a1.4 1.4 0 0 1 0 2.4L7.1 20.3A2 2 0 0 1 4 18.5v-13a2 2 0 0 1 1-1.7Z" fill="currentColor"/><path d="m9 8 7 4-7 4Z" fill="#0a1020"/></svg></span><span class="brand-copy"><strong>SyncVibe</strong><small>Watch together, feel closer.</small></span></a>
+      <div class="topbar-actions">
+        <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Not connected</span></div>
+        <button id="inviteButton" class="btn btn-secondary" disabled><span aria-hidden="true">↗</span> Invite friends</button>
+        <button id="settingsButton" class="icon-btn" aria-label="Settings" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <main class="layout" id="home">
+      <aside class="sidebar">
+        <div class="sidebar-label">YOUR SPACE</div>
+        <button class="nav-item active" data-scroll="watchArea"><span>▶</span> Watch room</button>
+        <button class="nav-item" data-scroll="discovery"><span>⌕</span> Discover</button>
+        <button class="nav-item" data-scroll="playlistPanel"><span>☷</span> Shared playlist <b id="playlistCount" class="nav-count">0</b></button>
+        <button class="nav-item" data-scroll="pollsPanel"><span>◉</span> Group polls</button>
+        <div class="sidebar-divider"></div>
+        <div class="room-card">
+          <div class="room-card-icon">✦</div>
+          <p class="eyebrow">YOUR ROOM</p>
+          <div class="room-code" id="sidebarRoomCode">— — — —</div>
+          <p class="muted small" id="roomSubtitle">Create a room or join a friend.</p>
+          <button id="sidebarInvite" class="btn btn-ghost btn-full" disabled>Copy invite link <span>↗</span></button>
+        </div>
+        <div class="sidebar-bottom"><span class="mini-pulse"></span><span>Made for shared moments</span><small>v3.0</small></div>
+      </aside>
+
+      <section class="main-column">
+        <section class="welcome-row">
+          <div><p class="eyebrow accent">YOUR SHARED SCREEN</p><h1 id="roomHeading">Good things are better together.</h1><p class="muted" id="roomDescription">Create a room to start watching with friends, or join with an invite code.</p></div>
+          <div class="room-actions"><button id="createRoomButton" class="btn btn-primary">＋ Create room</button><button id="joinRoomButton" class="btn btn-secondary">Join a room</button></div>
+        </section>
+
+        <section id="watchArea" class="player-card panel">
+          <div class="player-heading"><div class="video-meta"><div class="video-icon">▶</div><div class="min-width"><h2 id="currentVideoTitle">No video selected</h2><p id="currentVideoSub" class="muted small">Paste a YouTube link or pick something below.</p></div></div><div class="player-heading-actions"><span id="hostPill" class="role-pill">Not in a room</span><a id="openYoutube" class="text-link disabled" href="#" target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a></div></div>
+          <div class="player-wrap"><div id="youtubePlayer" class="youtube-player"></div><div id="playerPlaceholder" class="player-placeholder"><div class="placeholder-orb">▶</div><h3>Your next shared moment starts here</h3><p>Join a room, then paste a YouTube link or choose a recommendation.</p><button id="placeholderLoad" class="btn btn-primary">Choose a video</button></div><div id="reactionOverlay" class="reaction-overlay" aria-hidden="true"></div></div>
+          <div class="player-controls">
+            <div class="control-status"><span class="sync-indicator"></span><span id="syncLabel">Waiting for a room</span><span class="control-divider"></span><span id="playerTime" class="muted small">—:—</span></div>
+            <div class="control-buttons"><button id="playButton" class="btn btn-primary" disabled>▶ Play</button><button id="pauseButton" class="btn btn-secondary" disabled>Ⅱ Pause</button><button id="backButton" class="btn btn-secondary" disabled>↶ 10s</button><button id="forwardButton" class="btn btn-secondary" disabled>↷ 10s</button><label class="rate-select">Speed <select id="playbackRate" disabled><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1× Normal</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label><button id="resyncButton" class="btn btn-quiet" disabled>⟳ Re-sync</button></div>
+          </div>
+          <form id="videoForm" class="video-url-form"><label class="input-with-icon"><span>▶</span><input id="youtubeUrlInput" type="text" autocomplete="url" placeholder="Paste a YouTube URL or 11-character video ID" aria-label="YouTube video URL or ID" maxlength="500"><button class="input-clear" id="clearUrl" type="button" aria-label="Clear URL">×</button></label><button class="btn btn-secondary" type="submit">Load video</button><button class="btn btn-quiet" id="addToPlaylist" type="button" disabled>＋ Add to queue</button></form>
+          <p id="playerNotice" class="inline-notice" role="status" aria-live="polite">Tip: some videos disable embedding. SyncVibe will tell you if YouTube blocks a video.</p>
+        </section>
+
+        <section id="discovery" class="panel discovery-panel">
+          <div class="section-heading"><div><p class="eyebrow accent">FIND YOUR NEXT WATCH</p><h2>Discover videos</h2></div><span class="muted small">Curated picks · YouTube playback</span></div>
+          <div class="search-row"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search by title, vibe, or category…" aria-label="Search recommendations"><kbd>/</kbd></label><select id="categoryFilter" aria-label="Filter category"><option value="all">All categories</option><option value="Nature">Nature</option><option value="Music">Music</option><option value="Classics">Classics</option><option value="Learning">Learning</option></select></div>
+          <div id="recommendationsGrid" class="recommendations-grid"></div>
+          <p id="emptySearch" class="empty-state hidden">No curated matches. Try another search or paste a YouTube link above.</p>
+          <p class="discovery-footnote">Recommendations are a small curated catalogue, not a full YouTube search. No YouTube Data API key is required for embedded playback.</p>
+        </section>
+
+        <div class="lower-grid">
+          <section id="playlistPanel" class="panel sub-panel"><div class="section-heading compact"><div><p class="eyebrow accent">UP NEXT</p><h2>Shared playlist <span id="playlistHeadingCount" class="heading-count">0</span></h2></div><span class="tiny-badge">ROOM QUEUE</span></div><div id="playlistItems" class="playlist-items"><div class="empty-state">Your shared queue is empty. Add a video to get started.</div></div></section>
+          <section id="pollsPanel" class="panel sub-panel"><div class="section-heading compact"><div><p class="eyebrow accent">DECIDE TOGETHER</p><h2>Group polls</h2></div><button id="newPollButton" class="btn btn-quiet btn-small" disabled>＋ New poll</button></div><div id="pollsList" class="polls-list"><div class="empty-state">Create a room to start a group poll.</div></div></section>
+        </div>
+      </section>
+
+      <aside class="right-column">
+        <section class="panel side-panel chat-panel"><div class="side-panel-heading"><div><p class="eyebrow accent">LIVE ROOM</p><h2>Conversation</h2></div><span id="onlineCount" class="online-count">0 online</span></div>
+          <div class="tabs" role="tablist"><button class="tab active" data-tab="chat" role="tab" aria-selected="true">Chat</button><button class="tab" data-tab="reactions" role="tab" aria-selected="false">Reactions</button><button class="tab" data-tab="people" role="tab" aria-selected="false">People <span id="peopleCount">0</span></button></div>
+          <div id="tabChat" class="tab-content chat-content"><div id="chatMessages" class="chat-messages"><div class="empty-state">Your room's conversation will appear here.</div></div><form id="chatForm" class="chat-form"><input id="chatInput" type="text" maxlength="500" placeholder="Say something nice…" aria-label="Chat message" disabled><button class="send-button" type="submit" aria-label="Send message" disabled>↑</button></form><p class="chat-hint">Be kind. Messages are kept for this room session.</p></div>
+          <div id="tabReactions" class="tab-content reaction-content hidden"><p class="muted small">Send a little energy to everyone watching.</p><div class="reaction-grid"><button data-emoji="❤️">❤️</button><button data-emoji="🔥">🔥</button><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="😮">😮</button><button data-emoji="🎉">🎉</button><button data-emoji="😭">😭</button><button data-emoji="👍">👍</button></div><div id="reactionFeed" class="reaction-feed"><p class="muted small">Reactions from the room will show up here.</p></div></div>
+          <div id="tabPeople" class="tab-content people-content hidden"><div id="peopleList" class="people-list"><div class="empty-state">No participants yet.</div></div><p class="muted tiny">The host can transfer control to another connected participant.</p></div>
+        </section>
+        <section class="panel room-details"><div class="side-panel-heading"><div><p class="eyebrow accent">ROOM DETAILS</p><h2>Made for your group</h2></div><div class="room-sparkle">✦</div></div><div class="detail-row"><span>Room code</span><strong id="detailRoomCode">—</strong></div><div class="detail-row"><span>Host</span><strong id="detailHost">—</strong></div><div class="detail-row"><span>People online</span><strong id="detailOnline">0</strong></div><button id="leaveRoomButton" class="btn btn-danger btn-full" disabled>Leave room</button></section>
+        <div class="side-note"><span>✦</span><p><strong>Small tip</strong><br>For the smoothest sync, keep the tab open and use videos that allow embedding.</p></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden" role="presentation">
+    <section id="roomModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="roomModalTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">✦</div><p class="eyebrow accent">LET'S WATCH TOGETHER</p><h2 id="roomModalTitle">Create your room</h2><p id="roomModalDescription" class="muted">Choose a display name and invite your people.</p><form id="roomForm"><label class="field-label" for="displayName">Your display name</label><input id="displayName" name="displayName" maxlength="24" required placeholder="e.g. Alex" autocomplete="nickname"><div id="roomCodeField" class="hidden"><label class="field-label" for="roomCodeInput">Room code</label><input id="roomCodeInput" name="roomCode" maxlength="12" placeholder="e.g. VIBE2026" autocapitalize="characters"></div><div id="customCodeField"><label class="field-label" for="customRoomCode">Custom room code <span class="muted">(optional)</span></label><input id="customRoomCode" maxlength="12" placeholder="e.g. FRIDAYNIGHT" autocapitalize="characters"><p class="field-hint">4–12 letters or numbers. Leave blank for a random code.</p></div><p id="roomFormError" class="form-error hidden" role="alert"></p><button id="roomFormSubmit" class="btn btn-primary btn-full" type="submit">Create room</button></form></section>
+    <section id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">⚙</div><p class="eyebrow accent">CONNECTION SETTINGS</p><h2 id="settingsTitle">Server connection</h2><p class="muted">For local development use <code>http://localhost:3000</code>. For a live site, enter your deployed backend URL.</p><form id="settingsForm"><label class="field-label" for="serverUrlInput">Realtime server URL</label><input id="serverUrlInput" type="url" placeholder="https://your-syncvibe-server.onrender.com" required><p class="field-hint">Use HTTPS for production. The backend must allow this site's origin.</p><button class="btn btn-primary btn-full" type="submit">Save and connect</button><button class="btn btn-quiet btn-full" type="button" id="resetServerUrl">Use default local server</button></form></section>
+    <section id="inviteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="inviteTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">↗</div><p class="eyebrow accent">BRING YOUR PEOPLE</p><h2 id="inviteTitle">Invite your friends</h2><p class="muted">Anyone with this link can try to join your room. Share it only with people you trust.</p><label class="field-label" for="inviteLinkInput">Room invite link</label><input id="inviteLinkInput" readonly><button id="copyInviteModal" class="btn btn-primary btn-full" type="button">Copy invite link</button><p class="field-hint">Your friends need the SyncVibe website and a working server connection.</p></section>
+    <section id="pollModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pollModalTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">◉</div><p class="eyebrow accent">DECIDE AS A GROUP</p><h2 id="pollModalTitle">Create a poll</h2><form id="pollForm"><label class="field-label" for="pollQuestion">Question</label><input id="pollQuestion" maxlength="180" required placeholder="What should we watch next?"><label class="field-label" for="pollOptions">Options <span class="muted">(one per line)</span></label><textarea id="pollOptions" rows="4" required placeholder="Comedy&#10;Music&#10;Documentary"></textarea><p class="field-hint">Add 2–6 unique options. Everyone in the room can vote.</p><p id="pollFormError" class="form-error hidden" role="alert"></p><button class="btn btn-primary btn-full" type="submit">Create poll</button></form></section>
+  </div>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <footer class="site-footer"><span>SyncVibe</span><span>Independent watch-party experience · YouTube playback is subject to each video's embed settings.</span><a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube Terms ↗</a></footer>
+</body>
+</html>
