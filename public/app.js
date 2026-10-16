@@ -75,7 +75,17 @@ function connect() {
   if (typeof window.io !== 'function') { setConnection('', 'Socket.IO unavailable'); toast('Could not load the realtime client. Check your connection and reload.', 'error', 6000); return; }
   if (state.socket) { state.socket.removeAllListeners(); state.socket.disconnect(); }
   setConnection('connecting', 'Connecting…');
-  state.socket = window.io(state.serverUrl, { transports: ['websocket','polling'], auth: { resumeToken: state.resumeToken || undefined }, reconnection: true, reconnectionAttempts: Infinity, timeout: 10000 });
+  state.socket = window.io(state.serverUrl, {
+    path: '/socket.io/',
+    transports: ['polling', 'websocket'],
+    upgrade: true,
+    auth: { resumeToken: state.resumeToken || undefined },
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
+  });
   const socket = state.socket;
   socket.on('connect', () => { setConnection('connected', 'Connected'); measureClockOffset(socket); if (!state.room) toast('Connected to SyncVibe server. Create a room or join with a code.'); });
   socket.on('connect_error', err => { setConnection('connecting', 'Reconnecting…'); $('playerNotice').textContent = `Server connection issue: ${err.message}. Check Settings if this persists.`; });
