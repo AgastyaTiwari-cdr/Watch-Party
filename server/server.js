@@ -4,8 +4,13 @@ import { Server } from 'socket.io';
 import { randomBytes, randomUUID } from 'node:crypto';
 
 const PORT = Number(process.env.PORT || 3000);
-const origins = (process.env.CLIENT_ORIGINS || 'http://localhost:5500,http://127.0.0.1:5500,http://localhost:5173,http://127.0.0.1:5173')
-  .split(',').map(v => v.trim()).filter(Boolean);
+const origins = (
+  process.env.CLIENT_ORIGINS ||
+  'https://watch-party-server-steel.vercel.app,http://localhost:5500,http://127.0.0.1:5500,http://localhost:5173,http://127.0.0.1:5173'
+)
+  .split(',')
+  .map(v => v.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 const requestedMaxMembers = Number(process.env.MAX_MEMBERS || 30);
 const MAX_MEMBERS = Number.isFinite(requestedMaxMembers) ? Math.max(10, Math.min(100, requestedMaxMembers)) : 30;
 const ROOM_TTL_MS = 12 * 60 * 60 * 1000;
