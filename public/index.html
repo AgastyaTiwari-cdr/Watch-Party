@@ -1,101 +1,276 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="theme-color" content="#090e1c">
-  <meta name="description" content="Watch YouTube together in real time with shared playback, chat, reactions, playlists and polls.">
-  <title>SyncVibe — Watch together, feel closer</title>
+  <meta name="theme-color" content="#ffdd00">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Watch YouTube together in real time. One shared timeline, live chat and a gallery of things to watch.">
+  <title>SyncVibe - Watch together, in the same second</title>
   <link rel="preconnect" href="https://www.youtube.com">
   <link rel="preconnect" href="https://www.youtube-nocookie.com">
   <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="./styles.css">
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" defer></script>
   <script src="https://www.youtube.com/iframe_api" defer></script>
   <script src="./config.js" defer></script>
   <script type="module" src="./app.js"></script>
 </head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#home" aria-label="SyncVibe home"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.8a2 2 0 0 1 2.1-.1l13.1 7.1a1.4 1.4 0 0 1 0 2.4L7.1 20.3A2 2 0 0 1 4 18.5v-13a2 2 0 0 1 1-1.7Z" fill="currentColor"/><path d="m9 8 7 4-7 4Z" fill="#0a1020"/></svg></span><span class="brand-copy"><strong>SyncVibe</strong><small>Watch together, feel closer.</small></span></a>
-      <div class="topbar-actions">
-        <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Not connected</span></div>
-        <button id="inviteButton" class="btn btn-secondary" disabled><span aria-hidden="true">↗</span> Invite friends</button>
-        <button id="settingsButton" class="icon-btn" aria-label="Settings" title="Settings">⚙</button>
+<body data-view="home" data-room="false">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-queue" viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h6"/><path d="m18 14 3 2.5-3 2.5z" fill="currentColor"/></symbol>
+    <symbol id="i-poll" viewBox="0 0 24 24"><path d="M6 20v-7M12 20V5M18 20v-11"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3.2 2.7-5 5.5-5s4.9 1.8 5.5 5"/><path d="M16 5.6a3.2 3.2 0 0 1 0 5.8M18 14.4c1.6.7 2.6 2.2 3 4.6"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/></symbol>
+    <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c.9 1.4 2 2 3.5 2s2.6-.6 3.5-2"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.4"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="bar">
+  <a class="brand" id="brandLink" href="#home" aria-label="SyncVibe home">
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-play"/></svg></span>
+    <span class="brand-name">SyncVibe</span>
+  </a>
+
+  <nav class="views" id="viewNav" aria-label="Sections">
+    <button type="button" data-view="home" data-pre-room><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span>Home</span></button>
+    <button type="button" data-view="watch" data-needs-room><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span>Watch</span></button>
+    <button type="button" data-view="discover"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg><span>Discover</span></button>
+    <button type="button" data-view="queue" data-needs-room><svg class="ico" aria-hidden="true"><use href="#i-queue"/></svg><span>Queue</span><b id="queueCount" class="count" hidden>0</b></button>
+    <button type="button" data-view="polls" data-needs-room><svg class="ico" aria-hidden="true"><use href="#i-poll"/></svg><span>Polls</span></button>
+    <button type="button" data-view="room" data-needs-room><svg class="ico" aria-hidden="true"><use href="#i-people"/></svg><span>Room</span></button>
+  </nav>
+
+  <div class="bar-end">
+    <button type="button" id="roomChip" class="chip" data-needs-room title="Copy invite link">
+      <span class="visually-hidden">Copy invite link for room </span><span id="roomChipCode">----</span>
+      <svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg>
+    </button>
+    <span class="conn" role="status"><i id="connectionDot" class="dot"></i><span id="connectionText">Not connected</span></span>
+    <button type="button" id="settingsButton" class="icon-btn" aria-label="Connection settings"><svg class="ico" aria-hidden="true"><use href="#i-gear"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- HOME -->
+  <section class="view view-home is-active" id="view-home" data-view="home" aria-labelledby="homeTitle">
+    <div class="home-copy">
+      <h1 id="homeTitle" tabindex="-1">Watch together, in the same second!</h1>
+      <p>Open a room and paste a YouTube link. Everyone's video follows the host: play, pause and seek.</p>
+      <div class="home-actions">
+        <button type="button" id="createRoomButton" class="btn btn-primary">Create a room</button>
+        <button type="button" id="joinRoomButton" class="btn btn-secondary">Join with a code</button>
       </div>
-    </header>
+    </div>
+    <div class="home-stage" id="homeStage" aria-hidden="true">
+      <div class="tv">
+        <div class="tv-screen"><span class="tv-play"><svg viewBox="0 0 24 24"><use href="#i-play"/></svg></span></div>
+        <div class="tv-bar"><span class="tv-fill"></span><i class="peer p1"></i><i class="peer p2"></i><i class="peer p3"></i></div>
+      </div>
+      <div class="burst burst-a"><strong>250 ms</strong><span>sync target</span></div>
+      <div class="burst burst-b"><strong>30</strong><span>viewers</span></div>
+      <p class="bubble bubble-a">Same second!</p>
+      <p class="bubble bubble-b">Press play!</p>
+    </div>
+  </section>
 
-    <main class="layout" id="home">
-      <aside class="sidebar">
-        <div class="sidebar-label">YOUR SPACE</div>
-        <button class="nav-item active" data-scroll="watchArea"><span>▶</span> Watch room</button>
-        <button class="nav-item" data-scroll="discovery"><span>⌕</span> Discover</button>
-        <button class="nav-item" data-scroll="playlistPanel"><span>☷</span> Shared playlist <b id="playlistCount" class="nav-count">0</b></button>
-        <button class="nav-item" data-scroll="pollsPanel"><span>◉</span> Group polls</button>
-        <div class="sidebar-divider"></div>
-        <div class="room-card">
-          <div class="room-card-icon">✦</div>
-          <p class="eyebrow">YOUR ROOM</p>
-          <div class="room-code" id="sidebarRoomCode">— — — —</div>
-          <p class="muted small" id="roomSubtitle">Create a room or join a friend.</p>
-          <button id="sidebarInvite" class="btn btn-ghost btn-full" disabled>Copy invite link <span>↗</span></button>
-        </div>
-        <div class="sidebar-bottom"><span class="mini-pulse"></span><span>Made for shared moments</span><small>v3.0</small></div>
-      </aside>
+  <!-- WATCH -->
+  <section class="view view-watch" id="view-watch" data-view="watch" aria-labelledby="watchTitle">
+    <h1 class="visually-hidden" id="watchTitle" tabindex="-1">Watch</h1>
+    <div class="watch-grid">
+      <div class="stage">
+        <form id="videoForm" class="command" autocomplete="off">
+          <label class="command-field">
+            <span class="visually-hidden">YouTube link or video ID</span>
+            <svg class="ico" aria-hidden="true"><use href="#i-play"/></svg>
+            <input id="youtubeUrlInput" type="text" inputmode="url" placeholder="Paste a YouTube link to play it for the room" maxlength="500" spellcheck="false">
+          </label>
+          <span class="command-actions" id="commandActions" hidden>
+            <button type="submit" id="playNowButton" class="btn btn-primary btn-sm">Play now</button>
+            <button type="button" id="addToPlaylist" class="btn btn-text btn-sm">Add to queue</button>
+          </span>
+        </form>
 
-      <section class="main-column">
-        <section class="welcome-row">
-          <div><p class="eyebrow accent">YOUR SHARED SCREEN</p><h1 id="roomHeading">Good things are better together.</h1><p class="muted" id="roomDescription">Create a room to start watching with friends, or join with an invite code.</p></div>
-          <div class="room-actions"><button id="createRoomButton" class="btn btn-primary">＋ Create room</button><button id="joinRoomButton" class="btn btn-secondary">Join a room</button></div>
-        </section>
-
-        <section id="watchArea" class="player-card panel">
-          <div class="player-heading"><div class="video-meta"><div class="video-icon">▶</div><div class="min-width"><h2 id="currentVideoTitle">No video selected</h2><p id="currentVideoSub" class="muted small">Paste a YouTube link or pick something below.</p></div></div><div class="player-heading-actions"><span id="hostPill" class="role-pill">Not in a room</span><a id="openYoutube" class="text-link disabled" href="#" target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a></div></div>
-          <div class="player-wrap"><div id="youtubePlayer" class="youtube-player"></div><div id="playerPlaceholder" class="player-placeholder"><div class="placeholder-orb">▶</div><h3>Your next shared moment starts here</h3><p>Join a room, then paste a YouTube link or choose a recommendation.</p><button id="placeholderLoad" class="btn btn-primary">Choose a video</button></div><div id="reactionOverlay" class="reaction-overlay" aria-hidden="true"></div></div>
-          <div class="player-controls">
-            <div class="control-status"><span class="sync-indicator"></span><span id="syncLabel">Waiting for a room</span><span class="control-divider"></span><span id="playerTime" class="muted small">—:—</span></div>
-            <div class="control-buttons"><button id="playButton" class="btn btn-primary" disabled>▶ Play</button><button id="pauseButton" class="btn btn-secondary" disabled>Ⅱ Pause</button><button id="backButton" class="btn btn-secondary" disabled>↶ 10s</button><button id="forwardButton" class="btn btn-secondary" disabled>↷ 10s</button><label class="rate-select">Speed <select id="playbackRate" disabled><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1× Normal</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label><button id="resyncButton" class="btn btn-quiet" disabled>⟳ Re-sync</button></div>
+        <div class="player-box">
+          <div class="player-wrap" id="playerWrap">
+            <div id="youtubePlayer" class="youtube-player"></div>
+            <div id="playerPlaceholder" class="player-placeholder">
+              <div class="orb"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg></div>
+              <p id="placeholderText">Nothing playing yet.<br>Paste a link above or pick something in Discover.</p>
+            </div>
+            <div id="reactionOverlay" class="reaction-overlay" aria-hidden="true"></div>
           </div>
-          <form id="videoForm" class="video-url-form"><label class="input-with-icon"><span>▶</span><input id="youtubeUrlInput" type="text" autocomplete="url" placeholder="Paste a YouTube URL or 11-character video ID" aria-label="YouTube video URL or ID" maxlength="500"><button class="input-clear" id="clearUrl" type="button" aria-label="Clear URL">×</button></label><button class="btn btn-secondary" type="submit">Load video</button><button class="btn btn-quiet" id="addToPlaylist" type="button" disabled>＋ Add to queue</button></form>
-          <p id="playerNotice" class="inline-notice" role="status" aria-live="polite">Tip: some videos disable embedding. SyncVibe will tell you if YouTube blocks a video.</p>
-        </section>
-
-        <section id="discovery" class="panel discovery-panel">
-          <div class="section-heading"><div><p class="eyebrow accent">FIND YOUR NEXT WATCH</p><h2>Discover videos</h2></div><span class="muted small">Curated picks · YouTube playback</span></div>
-          <div class="search-row"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search by title, vibe, or category…" aria-label="Search recommendations"><kbd>/</kbd></label><select id="categoryFilter" aria-label="Filter category"><option value="all">All categories</option><option value="Nature">Nature</option><option value="Music">Music</option><option value="Classics">Classics</option><option value="Learning">Learning</option></select></div>
-          <div id="recommendationsGrid" class="recommendations-grid"></div>
-          <p id="emptySearch" class="empty-state hidden">No curated matches. Try another search or paste a YouTube link above.</p>
-          <p class="discovery-footnote">Recommendations are a small curated catalogue, not a full YouTube search. No YouTube Data API key is required for embedded playback.</p>
-        </section>
-
-        <div class="lower-grid">
-          <section id="playlistPanel" class="panel sub-panel"><div class="section-heading compact"><div><p class="eyebrow accent">UP NEXT</p><h2>Shared playlist <span id="playlistHeadingCount" class="heading-count">0</span></h2></div><span class="tiny-badge">ROOM QUEUE</span></div><div id="playlistItems" class="playlist-items"><div class="empty-state">Your shared queue is empty. Add a video to get started.</div></div></section>
-          <section id="pollsPanel" class="panel sub-panel"><div class="section-heading compact"><div><p class="eyebrow accent">DECIDE TOGETHER</p><h2>Group polls</h2></div><button id="newPollButton" class="btn btn-quiet btn-small" disabled>＋ New poll</button></div><div id="pollsList" class="polls-list"><div class="empty-state">Create a room to start a group poll.</div></div></section>
         </div>
-      </section>
 
-      <aside class="right-column">
-        <section class="panel side-panel chat-panel"><div class="side-panel-heading"><div><p class="eyebrow accent">LIVE ROOM</p><h2>Conversation</h2></div><span id="onlineCount" class="online-count">0 online</span></div>
-          <div class="tabs" role="tablist"><button class="tab active" data-tab="chat" role="tab" aria-selected="true">Chat</button><button class="tab" data-tab="reactions" role="tab" aria-selected="false">Reactions</button><button class="tab" data-tab="people" role="tab" aria-selected="false">People <span id="peopleCount">0</span></button></div>
-          <div id="tabChat" class="tab-content chat-content"><div id="chatMessages" class="chat-messages"><div class="empty-state">Your room's conversation will appear here.</div></div><form id="chatForm" class="chat-form"><input id="chatInput" type="text" maxlength="500" placeholder="Say something nice…" aria-label="Chat message" disabled><button class="send-button" type="submit" aria-label="Send message" disabled>↑</button></form><p class="chat-hint">Be kind. Messages are kept for this room session.</p></div>
-          <div id="tabReactions" class="tab-content reaction-content hidden"><p class="muted small">Send a little energy to everyone watching.</p><div class="reaction-grid"><button data-emoji="❤️">❤️</button><button data-emoji="🔥">🔥</button><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="😮">😮</button><button data-emoji="🎉">🎉</button><button data-emoji="😭">😭</button><button data-emoji="👍">👍</button></div><div id="reactionFeed" class="reaction-feed"><p class="muted small">Reactions from the room will show up here.</p></div></div>
-          <div id="tabPeople" class="tab-content people-content hidden"><div id="peopleList" class="people-list"><div class="empty-state">No participants yet.</div></div><p class="muted tiny">The host can transfer control to another connected participant.</p></div>
-        </section>
-        <section class="panel room-details"><div class="side-panel-heading"><div><p class="eyebrow accent">ROOM DETAILS</p><h2>Made for your group</h2></div><div class="room-sparkle">✦</div></div><div class="detail-row"><span>Room code</span><strong id="detailRoomCode">—</strong></div><div class="detail-row"><span>Host</span><strong id="detailHost">—</strong></div><div class="detail-row"><span>People online</span><strong id="detailOnline">0</strong></div><button id="leaveRoomButton" class="btn btn-danger btn-full" disabled>Leave room</button></section>
-        <div class="side-note"><span>✦</span><p><strong>Small tip</strong><br>For the smoothest sync, keep the tab open and use videos that allow embedding.</p></div>
+        <div class="now">
+          <div class="now-title">
+            <h2 id="currentVideoTitle">No video selected</h2>
+            <p id="currentVideoSub">Waiting for the host to choose something.</p>
+          </div>
+          <div class="now-meta">
+            <a id="openYoutube" class="text-link is-disabled" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true" tabindex="-1">Open on YouTube<svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
+            <button type="button" id="syncChip" class="sync" disabled>
+              <i class="dot" id="syncDot"></i><span id="syncLabel">Waiting for a room</span><span id="playerTime" class="time">-:--</span>
+            </button>
+          </div>
+        </div>
+        <p id="playerNotice" class="notice" role="status" aria-live="polite">The host uses the player's own controls. Everyone else follows automatically.</p>
+      </div>
+
+      <aside class="chat" aria-labelledby="chatTitle">
+        <header><h2 id="chatTitle">Chat</h2><span id="onlineCount" class="online">0 online</span></header>
+        <div id="chatMessages" class="chat-messages" role="log" aria-live="polite" aria-relevant="additions">
+          <p class="empty">Say hello once you're in a room.</p>
+        </div>
+        <form id="chatForm" class="chat-form" autocomplete="off">
+          <div class="tray" id="reactionTray" hidden>
+            <button type="button" data-emoji="❤️" aria-label="Send heart">❤️</button><button type="button" data-emoji="🔥" aria-label="Send fire">🔥</button><button type="button" data-emoji="👏" aria-label="Send clap">👏</button><button type="button" data-emoji="😂" aria-label="Send laugh">😂</button><button type="button" data-emoji="😮" aria-label="Send wow">😮</button><button type="button" data-emoji="🎉" aria-label="Send party">🎉</button>
+          </div>
+          <button type="button" id="reactionToggle" class="icon-btn" aria-label="Send a reaction" aria-expanded="false" aria-controls="reactionTray" disabled><svg class="ico" aria-hidden="true"><use href="#i-smile"/></svg></button>
+          <input id="chatInput" type="text" maxlength="500" placeholder="Message the room" aria-label="Chat message" disabled>
+          <button type="submit" id="chatSend" class="icon-btn send" aria-label="Send message" disabled><svg class="ico" aria-hidden="true"><use href="#i-send"/></svg></button>
+        </form>
       </aside>
-    </main>
-  </div>
+    </div>
+  </section>
 
-  <div id="modalBackdrop" class="modal-backdrop hidden" role="presentation">
-    <section id="roomModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="roomModalTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">✦</div><p class="eyebrow accent">LET'S WATCH TOGETHER</p><h2 id="roomModalTitle">Create your room</h2><p id="roomModalDescription" class="muted">Choose a display name and invite your people.</p><form id="roomForm"><label class="field-label" for="displayName">Your display name</label><input id="displayName" name="displayName" maxlength="24" required placeholder="e.g. Alex" autocomplete="nickname"><div id="roomCodeField" class="hidden"><label class="field-label" for="roomCodeInput">Room code</label><input id="roomCodeInput" name="roomCode" maxlength="12" placeholder="e.g. VIBE2026" autocapitalize="characters"></div><div id="customCodeField"><label class="field-label" for="customRoomCode">Custom room code <span class="muted">(optional)</span></label><input id="customRoomCode" maxlength="12" placeholder="e.g. FRIDAYNIGHT" autocapitalize="characters"><p class="field-hint">4–12 letters or numbers. Leave blank for a random code.</p></div><p id="roomFormError" class="form-error hidden" role="alert"></p><button id="roomFormSubmit" class="btn btn-primary btn-full" type="submit">Create room</button></form></section>
-    <section id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">⚙</div><p class="eyebrow accent">CONNECTION SETTINGS</p><h2 id="settingsTitle">Server connection</h2><p class="muted">For local development use <code>http://localhost:3000</code>. For a live site, enter your deployed backend URL.</p><form id="settingsForm"><label class="field-label" for="serverUrlInput">Realtime server URL</label><input id="serverUrlInput" type="url" placeholder="https://your-syncvibe-server.onrender.com" required><p class="field-hint">Use HTTPS for production. The backend must allow this site's origin.</p><button class="btn btn-primary btn-full" type="submit">Save and connect</button><button class="btn btn-quiet btn-full" type="button" id="resetServerUrl">Use default local server</button></form></section>
-    <section id="inviteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="inviteTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">↗</div><p class="eyebrow accent">BRING YOUR PEOPLE</p><h2 id="inviteTitle">Invite your friends</h2><p class="muted">Anyone with this link can try to join your room. Share it only with people you trust.</p><label class="field-label" for="inviteLinkInput">Room invite link</label><input id="inviteLinkInput" readonly><button id="copyInviteModal" class="btn btn-primary btn-full" type="button">Copy invite link</button><p class="field-hint">Your friends need the SyncVibe website and a working server connection.</p></section>
-    <section id="pollModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pollModalTitle"><button class="modal-close" data-close-modal aria-label="Close">×</button><div class="modal-icon">◉</div><p class="eyebrow accent">DECIDE AS A GROUP</p><h2 id="pollModalTitle">Create a poll</h2><form id="pollForm"><label class="field-label" for="pollQuestion">Question</label><input id="pollQuestion" maxlength="180" required placeholder="What should we watch next?"><label class="field-label" for="pollOptions">Options <span class="muted">(one per line)</span></label><textarea id="pollOptions" rows="4" required placeholder="Comedy&#10;Music&#10;Documentary"></textarea><p class="field-hint">Add 2–6 unique options. Everyone in the room can vote.</p><p id="pollFormError" class="form-error hidden" role="alert"></p><button class="btn btn-primary btn-full" type="submit">Create poll</button></form></section>
-  </div>
-  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <footer class="site-footer"><span>SyncVibe</span><span>Independent watch-party experience · YouTube playback is subject to each video's embed settings.</span><a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube Terms ↗</a></footer>
+  <!-- DISCOVER -->
+  <section class="view view-discover" id="view-discover" data-view="discover" aria-labelledby="discoverTitle">
+    <div class="discover-head">
+      <h1 id="discoverTitle" tabindex="-1">Find something to watch</h1>
+      <label class="search">
+        <span class="visually-hidden">Search the catalogue by title, creator or mood</span>
+        <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="searchInput" type="search" placeholder="Try &quot;sintle&quot;, &quot;lofi&quot; or paste a link" autocomplete="off" spellcheck="false">
+        <kbd aria-hidden="true">/</kbd>
+      </label>
+      <p id="resultCount" class="visually-hidden" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="gallery" id="gallery" role="region" aria-roledescription="carousel" aria-label="Videos. Use the left and right arrow keys to browse.">
+      <ul class="track" id="galleryTrack"></ul>
+      <p id="emptySearch" class="empty-search" hidden>Nothing matches that. Check the spelling, try a mood like "calm", or paste a YouTube link.</p>
+    </div>
+
+    <div class="spotlight" id="spotlight" aria-live="polite">
+      <div class="spotlight-copy">
+        <h2 id="spotlightTitle">&nbsp;</h2>
+        <p id="spotlightMeta"></p>
+      </div>
+      <div class="spotlight-actions">
+        <button type="button" id="spotlightPlay" class="btn btn-primary">Play for the room</button>
+        <button type="button" id="spotlightQueue" class="btn btn-text">Add to queue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUEUE -->
+  <section class="view view-list view-queue" id="view-queue" data-view="queue" aria-labelledby="queueTitle">
+    <div class="list-wrap">
+      <header class="list-head">
+        <h1 id="queueTitle" tabindex="-1">Up next</h1>
+        <p id="queueSummary">Videos anyone adds land here. The host starts them.</p>
+      </header>
+      <ol id="playlistItems" class="playlist"></ol>
+    </div>
+  </section>
+
+  <!-- POLLS -->
+  <section class="view view-list view-polls" id="view-polls" data-view="polls" aria-labelledby="pollsTitle">
+    <div class="list-wrap">
+      <header class="list-head with-action">
+        <div><h1 id="pollsTitle" tabindex="-1">Polls</h1><p>Settle what to watch next.</p></div>
+        <button type="button" id="newPollButton" class="btn btn-primary btn-sm" disabled>New poll</button>
+      </header>
+      <div id="pollsList" class="polls"></div>
+    </div>
+  </section>
+
+  <!-- ROOM -->
+  <section class="view view-list view-room" id="view-room" data-view="room" aria-labelledby="roomTitle">
+    <div class="list-wrap room-grid">
+      <div class="room-main">
+        <header class="list-head">
+          <h1 id="roomTitle" tabindex="-1">Room <span id="roomCodeBig">----</span></h1>
+          <p>Hosted by <strong id="detailHost">-</strong>. <span id="peopleCount">0 people</span> here.</p>
+        </header>
+        <ul id="peopleList" class="people"></ul>
+      </div>
+      <div class="room-side">
+        <label class="field-label" for="inviteLinkInput">Invite link</label>
+        <div class="copy-row">
+          <input id="inviteLinkInput" readonly value="">
+          <button type="button" id="copyInvite" class="btn btn-secondary btn-sm">Copy</button>
+        </div>
+        <p class="hint">Anyone with the link can join, so share it with people you trust.</p>
+        <button type="button" id="leaveRoomButton" class="btn btn-danger" disabled>Leave room</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- DIALOGS -->
+<dialog id="roomDialog" aria-labelledby="roomModalTitle">
+  <form id="roomForm" method="dialog" novalidate>
+    <button type="button" class="icon-btn close" data-close aria-label="Close"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <h2 id="roomModalTitle">Create a room</h2>
+    <p id="roomModalDescription" class="hint">Choose a display name, then invite your people.</p>
+    <label class="field-label" for="displayName">Display name</label>
+    <input id="displayName" name="displayName" maxlength="24" required placeholder="e.g. Alex" autocomplete="nickname">
+    <div id="roomCodeField" hidden>
+      <label class="field-label" for="roomCodeInput">Room code</label>
+      <input id="roomCodeInput" name="roomCode" maxlength="12" placeholder="e.g. FRIDAYNIGHT" autocapitalize="characters" autocomplete="off">
+    </div>
+    <div id="customCodeField">
+      <label class="field-label" for="customRoomCode">Custom code <span class="optional">(optional)</span></label>
+      <input id="customRoomCode" maxlength="12" placeholder="e.g. FRIDAYNIGHT" autocapitalize="characters" autocomplete="off" aria-describedby="customCodeHint">
+      <p id="customCodeHint" class="hint">4 to 12 letters or numbers. Leave blank for a random code.</p>
+    </div>
+    <p id="roomFormError" class="form-error" role="alert" hidden></p>
+    <button id="roomFormSubmit" class="btn btn-primary btn-block" type="submit">Create room</button>
+  </form>
+</dialog>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle">
+  <form id="settingsForm" method="dialog">
+    <button type="button" class="icon-btn close" data-close aria-label="Close"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <h2 id="settingsTitle">Connection</h2>
+    <p class="hint">The address of your SyncVibe realtime server. For local development use <code>http://localhost:3000</code>.</p>
+    <label class="field-label" for="serverUrlInput">Server URL</label>
+    <input id="serverUrlInput" type="url" placeholder="https://your-server.onrender.com" required>
+    <p class="hint">Use HTTPS in production. The server must allow this site's origin.</p>
+    <button class="btn btn-primary btn-block" type="submit">Save and reconnect</button>
+    <button class="btn btn-text btn-block" type="button" id="resetServerUrl">Use the default server</button>
+  </form>
+</dialog>
+
+<dialog id="pollDialog" aria-labelledby="pollModalTitle">
+  <form id="pollForm" method="dialog" novalidate>
+    <button type="button" class="icon-btn close" data-close aria-label="Close"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <h2 id="pollModalTitle">New poll</h2>
+    <label class="field-label" for="pollQuestion">Question</label>
+    <input id="pollQuestion" maxlength="180" required placeholder="What should we watch next?">
+    <label class="field-label" for="pollOptions">Options <span class="optional">(one per line, 2 to 6)</span></label>
+    <textarea id="pollOptions" rows="4" required placeholder="Comedy&#10;Music&#10;Documentary"></textarea>
+    <p id="pollFormError" class="form-error" role="alert" hidden></p>
+    <button class="btn btn-primary btn-block" type="submit">Create poll</button>
+  </form>
+</dialog>
+
+<div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="false"></div>
 </body>
 </html>
